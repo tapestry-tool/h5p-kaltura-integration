@@ -8,10 +8,10 @@ const VIDEO_FORMAT = {
     7: 'HD/1080'
 }
 
-const KALTURA_SERVICE_URL     = ubc_h5p_kaltura_integration_admin.kaltura_service_url;
-const KALTURA_PARTNER_ID      = ubc_h5p_kaltura_integration_admin.kaltura_partner_id;
+const KALTURA_SERVICE_URL      = ubc_h5p_kaltura_integration_admin.kaltura_service_url;
+const KALTURA_PARTNER_ID       = ubc_h5p_kaltura_integration_admin.kaltura_partner_id;
 const KALTURA_STREAMING_FORMAT = 'download';
-const KALTURA_PROTOCOL        = 'https';
+const KALTURA_PROTOCOL         = 'https';
 
 const downArrowSVG = () => {
     return (
@@ -162,23 +162,22 @@ export default props => {
         <>
             <div className='h5p-divider'></div>
             <div className='field kaltura-integration'>
-                <div
-                    className='kaltura-integration-accordion'
-                    onClick={() => {
-                        setIsVisible(!isVisible);
-                    }}
-                >
-                    <div>
+                <div className='kaltura-integration-accordion'>
+                    <div 
+                        onClick={() => {
+                            setIsVisible(!isVisible);
+                        }}
+                    >
                         <h3
                             style={{
                                 marginBottom: 0
                             }}
                         >Use UBC Kaltura Video</h3>
-                        <div className='h5peditor-field-description'>See how to <a href={`${ ubc_h5p_kaltura_integration_admin.kaltura_instruction_url }`} target="_blank">find the ID for you videos</a> you have uploaded to Kaltura</div>
+                        <div className='h5peditor-field-description'>See how to <a href={`${ ubc_h5p_kaltura_integration_admin.kaltura_instruction_url }`} target="_blank">find the ID for videos</a> you have uploaded to Kaltura</div>
                     </div>
                     { downArrowSVG() }
+                    { isVisible ? renderKalturaFields() : null }
                 </div>
-                { isVisible ? renderKalturaFields() : null }
             </div>
         </>
     );

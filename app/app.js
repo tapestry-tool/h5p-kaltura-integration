@@ -44,17 +44,12 @@ window.onload = () => {
 };
 
 function renderKalturaDom( relativeDom = null ) {
-	console.log("Kaltura DOM rendered");
 	const dialogTable = relativeDom ? relativeDom : document.querySelector('.h5p-editor-iframe').contentDocument.querySelector('.h5p-add-dialog-table');
 
-	// Remove upload videos and vertical line
-	dialogTable.removeChild(dialogTable.firstElementChild);
-	dialogTable.removeChild(dialogTable.firstElementChild);
-
-	// Add new div
+	// Add new div after box for video source URL
 	dialogTable
-	.querySelector('.h5p-dialog-box')
-	.insertAdjacentHTML('beforeend', '<div class=\"h5p-kaltura-integration\"></div>');
+	.querySelectorAll('.h5p-dialog-box')[1]
+	.insertAdjacentHTML('afterend', '<div class=\"h5p-kaltura-integration\"></div>');
 
 	// Render application
 	ReactDOM.render(
