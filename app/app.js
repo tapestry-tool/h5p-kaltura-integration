@@ -3,11 +3,11 @@ import ReactDOM from 'react-dom';
 import App from '../assets/src/js/h5p-new';
 import '../assets/src/css/h5p-new.scss';
 
-window.H5PEditorOnIframeLoaded( () => {
+window.onload = () => {
 	renderKalturaStyles();
 
 	/*
-	* Render Kaltura video dom to replace existing video/audio upload sectin on page load.
+	* Render Kaltura video dom to replace existing video/audio upload section on page load.
 	*/
 	const fieldsOnLoad = document.querySelector('.h5p-editor-iframe').contentDocument.querySelectorAll('.h5p-add-dialog-table');
 	fieldsOnLoad.forEach(field => {
@@ -17,8 +17,7 @@ window.H5PEditorOnIframeLoaded( () => {
 	/*
 	* More complicated content type that use video/audio as a widget or subtype.
 	*/
-
-	const targetNode = document.querySelector('.h5p-editor-iframe').contentDocument.querySelector('.h5peditor-form');
+	const targetNode = document.querySelector('.h5p-editor-iframe').contentDocument;
 	const config = { attributes: false, childList: true, subtree: true };
 
 	// Callback function to execute when mutations are observed
@@ -42,9 +41,10 @@ window.H5PEditorOnIframeLoaded( () => {
 	// Start observing the target node for configured mutations
 	observer.observe(targetNode, config);
 
-})
+};
 
 function renderKalturaDom( relativeDom = null ) {
+	console.log("Kaltura DOM rendered");
 	const dialogTable = relativeDom ? relativeDom : document.querySelector('.h5p-editor-iframe').contentDocument.querySelector('.h5p-add-dialog-table');
 
 	// Remove upload videos and vertical line
@@ -54,7 +54,7 @@ function renderKalturaDom( relativeDom = null ) {
 	// Add new div
 	dialogTable
 	.querySelector('.h5p-dialog-box')
-	.insertAdjacentHTML('beforeend', '<div class=\"h5p-kultura-integration\"></div>');
+	.insertAdjacentHTML('beforeend', '<div class=\"h5p-kaltura-integration\"></div>');
 
 	// Render application
 	ReactDOM.render(
@@ -62,7 +62,7 @@ function renderKalturaDom( relativeDom = null ) {
 			rootParent={dialogTable.closest('.h5p-add-dialog')}
 		/>,
 		// eslint-disable-next-line no-undef
-		dialogTable.querySelector('.h5p-kultura-integration')
+		dialogTable.querySelector('.h5p-kaltura-integration')
 	);
 }
 

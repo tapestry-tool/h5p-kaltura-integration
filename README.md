@@ -1,7 +1,7 @@
-# H5P Addon - Kalture Integration
+# H5P Addon - Kaltura Integration
 **this add-on adds extra functionality on top of H5P WordPress plugin. Please make sure the H5P plugin is installed and activated.*
 
-this add-on provides UI for users to pull video from UBC Kalture and embed into h5p contents.
+this add-on provides UI for users to pull video from UBC Kaltura and embed into h5p contents.
 
 ### Local Environment
 Install node packages

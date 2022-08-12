@@ -10,7 +10,7 @@
  * @wordpress-plugin
  * Plugin Name: UBC H5P Addon - Kaltura Integration
  * Plugin URI:  https://ubc.ca/
- * Description: Provides UI for users to pull video from UBC Kalture and embed into h5p contents.
+ * Description: Provides UI for users to pull video from UBC Kaltura and embed into h5p contents.
  * Version:     1.0.7
  * Author:      Kelvin Xu
  * Text Domain: ubc-h5p-addon-kaltura-integration
