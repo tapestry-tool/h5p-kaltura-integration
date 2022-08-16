@@ -112,7 +112,7 @@ export default props => {
                 <h3>Video ID</h3>
                 <input 
                     type="text" 
-                    placeholder='Enter UBC kaltura video ID. Eg, 0_mxcjbk76' 
+                    placeholder='Enter Kaltura video ID. Eg, 0_mxcjbk76' 
                     className="h5peditor-text" 
                     value={kalturaID}
                     onChange={e => {
@@ -172,7 +172,7 @@ export default props => {
                             style={{
                                 marginBottom: 0
                             }}
-                        >Use UBC Kaltura Video</h3>
+                        >Use Kaltura Video</h3>
                         <div className='h5peditor-field-description'>See how to <a href={`${ ubc_h5p_kaltura_integration_admin.kaltura_instruction_url }`} target="_blank">find the ID for videos</a> you have uploaded to Kaltura</div>
                     </div>
                     { downArrowSVG() }
