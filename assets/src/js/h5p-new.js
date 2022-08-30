@@ -53,6 +53,38 @@ export default props => {
         setIsInputdisabled(false);
     }
 
+    const getKalturaVideoUrl = (kalturaId) => {
+        return `${KALTURA_SERVICE_URL}/p/${KALTURA_PARTNER_ID}/sp/0/playManifest/entryId/${kalturaId}/format/${KALTURA_STREAMING_FORMAT}/protocol/${KALTURA_PROTOCOL}/flavorParamIds/${kalturaFormat}/`;
+    }
+
+    const uploadVideoToKaltura = async (videoFile) => {
+        const formData = new FormData();
+        formData.append( 'action', 'ubc_h5p_kaltura_upload_video' );
+        formData.append( 'nonce', ubc_h5p_kaltura_integration_admin.security_nonce );
+        formData.append( 'video_file', videoFile );
+
+        setActionsDisabled();
+        setMessage('');
+
+        let response = await fetch(ajaxurl, {
+            method: 'POST',
+            body: formData,
+        });
+        response = await response.json();
+
+        setActionsEnabled();
+        setMessage(response.message);
+        if (response.kalturaId) {
+            setKalturaID(response.kalturaId); 
+            setIsValid(true);
+
+            const videoUrl = getKalturaVideoUrl(response.kalturaId);
+            inputElement.value = videoUrl;
+        } else {
+            setIsValid(false);
+        }
+    }
+
     const generateKalturaVideoURL = async () => {
         if( ! kalturaID ) {
             setIsValid(false);
@@ -60,7 +92,7 @@ export default props => {
             return;
         }
 
-        const videoUrl = `${KALTURA_SERVICE_URL}/p/${KALTURA_PARTNER_ID}/sp/0/playManifest/entryId/${kalturaID}/format/${KALTURA_STREAMING_FORMAT}/protocol/${KALTURA_PROTOCOL}/flavorParamIds/${kalturaFormat}/`;
+        const videoUrl = getKalturaVideoUrl(kalturaID);
 
         let formData = new FormData();
 
@@ -109,6 +141,20 @@ export default props => {
                 }}
                 className='field'
             >
+                <h3>Upload Video to Kaltura</h3>
+                <input 
+                    type="file"
+                    placeholder="Choose a video file" 
+                    onChange={e => {
+                        const videoFile = e.target.files[0];
+                        if (videoFile) {
+                            uploadVideoToKaltura( videoFile );
+                        }
+                    }}
+                    disabled={ isInputDisabled }
+                ></input>
+                <p className='h5peditor-field-description'>Upload a video directly to Kaltura. The Kaltura ID will be automatically set when done.</p>
+
                 <h3>Video ID</h3>
                 <input 
                     type="text" 

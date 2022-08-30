@@ -8,6 +8,14 @@
 
 namespace UBC\H5P\KalturaIntegration;
 
+use Kaltura\Client\Client;
+use Kaltura\Client\Configuration;
+use Kaltura\Client\Enum\MediaType;
+use Kaltura\Client\Enum\SessionType;
+use Kaltura\Client\Type\MediaEntry;
+use Kaltura\Client\Type\UploadedFileTokenResource;
+use Kaltura\Client\Type\UploadToken;
+
 /**
  * Class to initiate Kaltura Integration functionalities
  */
@@ -21,8 +29,7 @@ class KalturaIntegration {
 	public function __construct() {
 		add_action( 'load-h5p-content_page_h5p_new', array( $this, 'enqueue_add_new_content_script' ), 10 );
 		add_action( 'wp_ajax_ubc_h5p_kaltura_verify_source', array( $this, 'kaltura_verify_source' ) );
-		//add_action( 'h5p_additional_embed_head_tags', array( $this, 'kaltura_embed_styles' ) );
-		//add_filter( 'print_h5p_content', array( $this, 'kaltura_shortcode_styles' ), 10, 2 );
+		add_action( 'wp_ajax_ubc_h5p_kaltura_upload_video', array( $this, 'kaltura_upload_video' ) );
 	}
 
 	/**
@@ -85,6 +92,73 @@ class KalturaIntegration {
 		}
 
 	}//end kaltura_verify_source()
+
+	/**
+	 * Create Kaltura Client and start Kaltura Session.
+	 * 
+	 * @return Client
+	 */
+	public function get_kaltura_client($type = SessionType::USER) {
+		$user = wp_get_current_user()->ID;
+    $kconf = new Configuration(KALTURA_PARTNER_ID);
+    $kconf->setServiceUrl(KALTURA_SERVICE_URL);
+    $kclient = new Client($kconf);
+    $ksession = $kclient->session->start(KALTURA_ADMIN_SECRET, $user, $type, KALTURA_PARTNER_ID);
+    $kclient->setKs($ksession);
+
+    return $kclient;
+	}
+
+	/**
+	 * Ajax handler to upload a video to Kaltura and return its entry ID.
+	 * 
+	 * @return void
+	 */
+	public function kaltura_upload_video() {
+		check_ajax_referer( 'security', 'nonce' );
+
+		$video_file_path = $_FILES['video_file']['tmp_name'];
+    $video_file_name = $_FILES['video_file']['name'];
+
+		try {
+			$kclient = $this->get_kaltura_client();
+
+			// 1. Create upload token
+			$uploadToken = new UploadToken();
+			$token = $kclient->uploadToken->add($uploadToken);
+	
+			// 2. Upload the file data
+			$resume = false;
+			$finalChunk = true;
+			$resumeAt = -1;
+			$upload = $kclient->uploadToken->upload($token->id, $video_file_path, $resume, $finalChunk, $resumeAt);
+	
+			// 3. Create Kaltura Media Entry
+			$mediaEntry = new MediaEntry();
+			$mediaEntry->name = $video_file_name;
+			$mediaEntry->mediaType = MediaType::VIDEO;
+			$entry = $kclient->media->add($mediaEntry);
+	
+			// 4. Attach the uploaded video to the Media Entry
+			$resource = new UploadedFileTokenResource();
+			$resource->token = $token->id;
+			$response = $kclient->media->addContent($entry->id, $resource);
+	
+			wp_send_json(
+				array(
+					'kalturaId' => $response->id,
+					'message' => __( "Successfully uploaded video to Kaltura. The Kaltura ID and source URL have been generated. Press 'Insert' to use this Kaltura media.", 'ubc-h5p-addon-kaltura-integration' ),
+				)
+			);
+		} catch (\Throwable $e) {
+			wp_send_json(
+				array(
+					'kalturaId'=> null,
+					'message' => __( "An error occurred. Please check your Kaltura credentials and video file and try again.", 'ubc-h5p-addon-kaltura-integration' ),
+				)
+			);
+		}
+	}
 
 	/**
 	 * Print style for presentation content type in embed mode.
