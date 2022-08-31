@@ -20,6 +20,9 @@ use Kaltura\Client\Type\UploadToken;
  * Class to initiate Kaltura Integration functionalities
  */
 class KalturaIntegration {
+	private $kaltura_admin_secret;
+	private $kaltura_partner_id;
+	private $kaltura_service_url;
 
 	/**
 	 * Initialize the class and set its properties.
@@ -30,6 +33,28 @@ class KalturaIntegration {
 		add_action( 'load-h5p-content_page_h5p_new', array( $this, 'enqueue_add_new_content_script' ), 10 );
 		add_action( 'wp_ajax_ubc_h5p_kaltura_verify_source', array( $this, 'kaltura_verify_source' ) );
 		add_action( 'wp_ajax_ubc_h5p_kaltura_upload_video', array( $this, 'kaltura_upload_video' ) );
+
+		$this->_set_kaltura_config_vars();
+	}
+
+	private function _set_kaltura_config_vars() {
+		if (
+			!empty(get_option('kaltura_admin_secret')) &&
+			!empty(get_option('kaltura_partner_id')) &&
+			!empty(get_option('kaltura_service_url')))
+		{
+			$this->kaltura_admin_secret = get_option('kaltura_admin_secret');
+			$this->kaltura_partner_id = get_option('kaltura_partner_id');
+			$this->kaltura_service_url = get_option('kaltura_service_url');
+		} elseif (
+			(defined('KALTURA_ADMIN_SECRET') && !empty(KALTURA_ADMIN_SECRET)) &&
+			(defined('KALTURA_PARTNER_ID') && !empty(KALTURA_PARTNER_ID)) &&
+			(defined('KALTURA_SERVICE_URL') && !empty(KALTURA_SERVICE_URL))
+		) {
+			$this->kaltura_admin_secret = KALTURA_ADMIN_SECRET;
+			$this->kaltura_partner_id = KALTURA_PARTNER_ID;
+			$this->kaltura_service_url = KALTURA_SERVICE_URL;
+		}
 	}
 
 	/**
@@ -58,8 +83,8 @@ class KalturaIntegration {
 				'plugin_url'              => H5P_KALTURA_INTEGRATION_PLUGIN_URL,
 				'kaltura_instruction_url' => defined( 'UBC_H5P_KALTURA_INSTRUCTION_URL' ) ? UBC_H5P_KALTURA_INSTRUCTION_URL : '/getting-started-with-h5p/finding-your-ubc-kaltura-video-id/',
 				'iframe_css_file_version' => filemtime( H5P_KALTURA_INTEGRATION_PLUGIN_DIR . 'assets/dist/css/app.css' ),
-				'kaltura_service_url' => KALTURA_SERVICE_URL,
-				'kaltura_partner_id' => KALTURA_PARTNER_ID,
+				'kaltura_service_url' => $this->kaltura_service_url,
+				'kaltura_partner_id' => $this->kaltura_partner_id,
 			)
 		);
 	}//end enqueue_add_new_content_script()
@@ -100,10 +125,10 @@ class KalturaIntegration {
 	 */
 	public function get_kaltura_client($type = SessionType::USER) {
 		$user = wp_get_current_user()->ID;
-    $kconf = new Configuration(KALTURA_PARTNER_ID);
-    $kconf->setServiceUrl(KALTURA_SERVICE_URL);
+    $kconf = new Configuration($this->kaltura_partner_id);
+    $kconf->setServiceUrl($this->kaltura_service_url);
     $kclient = new Client($kconf);
-    $ksession = $kclient->session->start(KALTURA_ADMIN_SECRET, $user, $type, KALTURA_PARTNER_ID);
+    $ksession = $kclient->session->start($this->kaltura_admin_secret, $user, $type, $this->kaltura_partner_id);
     $kclient->setKs($ksession);
 
     return $kclient;
