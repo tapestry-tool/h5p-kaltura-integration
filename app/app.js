@@ -7,7 +7,7 @@ window.onload = () => {
 	renderKalturaStyles();
 
 	/*
-	* Render Kaltura video dom to replace existing video/audio upload section on page load.
+	* Render Kaltura video dom alongside the existing video/audio upload section on page load.
 	*/
 	const fieldsOnLoad = document.querySelector('.h5p-editor-iframe').contentDocument.querySelectorAll('.h5p-add-dialog-table');
 	fieldsOnLoad.forEach(field => {

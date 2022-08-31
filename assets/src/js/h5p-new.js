@@ -134,6 +134,17 @@ export default props => {
     }
 
     const renderKalturaFields = () => {
+        if (!ubc_h5p_kaltura_integration_admin.kaltura_defined) {
+            return (
+                <div className="invalid h5p-notice"> 
+                    <p><strong>
+                        Sorry, we couldn't detect a Kaltura configuration on this site.
+                        To use Kaltura videos, please ensure you have provided a Kaltura configuration, then refresh the page.
+                    </strong></p>
+                </div>
+            );
+        }
+
         return (
             <div
                 style={{
@@ -205,26 +216,23 @@ export default props => {
     }
 
     return (
-        <>
-            <div className='h5p-divider'></div>
-            <div className='field kaltura-integration'>
-                <div className='kaltura-integration-accordion'>
-                    <div 
-                        onClick={() => {
-                            setIsVisible(!isVisible);
+        <div className='field kaltura-integration'>
+            <div className='kaltura-integration-accordion'>
+                <div 
+                    onClick={() => {
+                        setIsVisible(!isVisible);
+                    }}
+                >
+                    <h3
+                        style={{
+                            marginBottom: 0
                         }}
-                    >
-                        <h3
-                            style={{
-                                marginBottom: 0
-                            }}
-                        >Use Kaltura Video</h3>
-                        <div className='h5peditor-field-description'>See how to <a href={`${ ubc_h5p_kaltura_integration_admin.kaltura_instruction_url }`} target="_blank">find the ID for videos</a> you have uploaded to Kaltura</div>
-                    </div>
-                    { downArrowSVG() }
-                    { isVisible ? renderKalturaFields() : null }
+                    >Use Kaltura Video</h3>
+                    <div className='h5peditor-field-description'>See how to <a href={`${ ubc_h5p_kaltura_integration_admin.kaltura_instruction_url }`} target="_blank">find the ID for videos</a> you have uploaded to Kaltura</div>
                 </div>
+                { downArrowSVG() }
+                { isVisible ? renderKalturaFields() : null }
             </div>
-        </>
+        </div>
     );
 };

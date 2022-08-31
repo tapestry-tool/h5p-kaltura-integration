@@ -43,10 +43,12 @@ class KalturaIntegration
 
     private function _set_kaltura_config_vars()
     {
+        $this->kaltura_defined = true;
         if (
             !empty(get_option('kaltura_admin_secret')) &&
             !empty(get_option('kaltura_partner_id')) &&
             !empty(get_option('kaltura_service_url'))) {
+            
             $this->kaltura_admin_secret = get_option('kaltura_admin_secret');
             $this->kaltura_partner_id = get_option('kaltura_partner_id');
             $this->kaltura_service_url = get_option('kaltura_service_url');
@@ -58,6 +60,8 @@ class KalturaIntegration
             $this->kaltura_admin_secret = KALTURA_ADMIN_SECRET;
             $this->kaltura_partner_id = KALTURA_PARTNER_ID;
             $this->kaltura_service_url = KALTURA_SERVICE_URL;
+        } else {
+            $this->kaltura_defined = false;
         }
     }
 
@@ -88,6 +92,7 @@ class KalturaIntegration
                 'plugin_url'              => H5P_KALTURA_INTEGRATION_PLUGIN_URL,
                 'kaltura_instruction_url' => defined('UBC_H5P_KALTURA_INSTRUCTION_URL') ? UBC_H5P_KALTURA_INSTRUCTION_URL : '/getting-started-with-h5p/finding-your-ubc-kaltura-video-id/',
                 'iframe_css_file_version' => filemtime(H5P_KALTURA_INTEGRATION_PLUGIN_DIR . 'assets/dist/css/app.css'),
+                'kaltura_defined' => $this->kaltura_defined,
                 'kaltura_service_url' => $this->kaltura_service_url,
                 'kaltura_partner_id' => $this->kaltura_partner_id,
             )
@@ -184,7 +189,7 @@ class KalturaIntegration
             wp_send_json(
                 array(
                     'kalturaId'=> null,
-                    'message' => __("An error occurred. Please check your Kaltura credentials and video file and try again.", 'ubc-h5p-addon-kaltura-integration'),
+                    'message' => __("An error occurred. Please check your Kaltura configuration variables and video file and try again.", 'ubc-h5p-addon-kaltura-integration'),
                 )
             );
         }
