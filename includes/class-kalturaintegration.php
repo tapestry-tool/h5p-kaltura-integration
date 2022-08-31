@@ -15,6 +15,8 @@ use Kaltura\Client\Enum\SessionType;
 use Kaltura\Client\Type\MediaEntry;
 use Kaltura\Client\Type\UploadedFileTokenResource;
 use Kaltura\Client\Type\UploadToken;
+use Kaltura\Client\Type\Category;
+use Kaltura\Client\Type\CategoryFilter;
 
 /**
  * Class to initiate Kaltura Integration functionalities
@@ -149,20 +151,18 @@ class KalturaIntegration {
 			$kclient = $this->get_kaltura_client();
 
 			// 1. Create upload token
-			$uploadToken = new UploadToken();
-			$token = $kclient->uploadToken->add($uploadToken);
+			$upload_token = new UploadToken();
+			$token = $kclient->uploadToken->add($upload_token);
 	
 			// 2. Upload the file data
-			$resume = false;
-			$finalChunk = true;
-			$resumeAt = -1;
-			$upload = $kclient->uploadToken->upload($token->id, $video_file_path, $resume, $finalChunk, $resumeAt);
+			$upload = $kclient->uploadToken->upload($token->id, $video_file_path);
 	
-			// 3. Create Kaltura Media Entry
-			$mediaEntry = new MediaEntry();
-			$mediaEntry->name = $video_file_name;
-			$mediaEntry->mediaType = MediaType::VIDEO;
-			$entry = $kclient->media->add($mediaEntry);
+			// 3. Create Kaltura Media Entry and add categories
+			$media_entry = new MediaEntry();
+			$media_entry->name = $video_file_name;
+			$media_entry->mediaType = MediaType::VIDEO;
+			$media_entry->categoriesIds = $this->_create_category_hierarchy($kclient);
+			$entry = $kclient->media->add($media_entry);
 	
 			// 4. Attach the uploaded video to the Media Entry
 			$resource = new UploadedFileTokenResource();
@@ -183,6 +183,62 @@ class KalturaIntegration {
 				)
 			);
 		}
+	}
+
+	/**
+	 * Create the hierarchy of categories 'Tapestry>{site URL}>{date}>H5P', to place an uploaded video under.
+	 * 
+	 * @return string	Comma-separated list of category IDs in the chain.
+	 */
+	private function _create_category_hierarchy($kclient)
+	{
+		$parent_category_name = 'Tapestry';
+		$filter = new CategoryFilter();
+		$filter->fullNameStartsWith = $parent_category_name;
+		$categories = $kclient->category->listAction($filter, null);
+
+		$k_admin_client = null;
+
+		// 'Tapestry'
+		$parent_category = $this->_get_or_create_category($parent_category_name, null, $categories, $k_admin_client);
+
+		// 'Tapestry>{site URL}'
+		$site_url = get_bloginfo('url');
+		$site_category = $this->_get_or_create_category($site_url, $parent_category, $categories, $k_admin_client);
+
+		// 'Tapestry>{site URL}>{date}'
+		$date = date('Y/m/d');
+		$date_category = $this->_get_or_create_category($date, $site_category, $categories, $k_admin_client);
+		
+		// 'Tapestry>{site URL}>{date}>H5P'
+		$h5p_category = $this->_get_or_create_category('H5P', $date_category, $categories, $k_admin_client);
+
+		return $parent_category->id.','.$site_category->id.','.$date_category->id.','.$h5p_category->id;
+	}
+	
+	/**
+	 * Find or create the category with name as a child of a parent category (or at the root, if no parent given).
+	 * 
+	 * @return Category
+	 */
+	private function _get_or_create_category($category_name, $parent_category, $categories, &$k_admin_client)
+	{
+			$category_full_name = $parent_category ? $parent_category->fullName.'>'.$category_name : $category_name;
+			$category_index = array_search($category_full_name, array_column($categories->objects, 'fullName'));
+			$category = (false !== $category_index ? $categories->objects[$category_index] : null);
+
+			if (null === $category) {
+					$created_category = new Category();
+
+					if ($parent_category) {
+							$created_category->parentId = $parent_category->id;
+					}
+					$created_category->name = $category_name;
+					$k_admin_client = $k_admin_client ?? $this->get_kaltura_client(SessionType::ADMIN);  // Reuse Kaltura session if possible
+					$category = $k_admin_client->category->add($created_category);
+			}
+
+			return $category;
 	}
 
 	/**
