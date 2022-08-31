@@ -21,16 +21,17 @@
 
 namespace UBC\H5P\KalturaIntegration;
 
-define( 'H5P_KALTURA_INTEGRATION_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
-define( 'H5P_KALTURA_INTEGRATION_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+define('H5P_KALTURA_INTEGRATION_PLUGIN_URL', plugin_dir_url(__FILE__));
+define('H5P_KALTURA_INTEGRATION_PLUGIN_DIR', plugin_dir_path(__FILE__));
 
 /**
  * Plugin initialization
  *
  * @return void
  */
-function init() {
-	require_once 'includes/class-kalturaintegration.php';
+function init()
+{
+    require_once 'includes/class-kalturaintegration.php';
 }
 
-add_action( 'admin_init', __NAMESPACE__ . '\\init' );
+add_action('admin_init', __NAMESPACE__ . '\\init');
