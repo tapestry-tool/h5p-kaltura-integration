@@ -8,10 +8,10 @@ const VIDEO_FORMAT = {
     7: 'HD/1080'
 }
 
-const KALTURA_SERVICE_URL     = 'admin.video.ubc.ca';
-const KALTURA_PARTNER_ID      = '113';
-const KALTURA_STRAMING_FORMAT = 'download';
-const KALTURA_PROTOCOL        = 'https'
+const KALTURA_SERVICE_URL      = ubc_h5p_kaltura_integration_admin.kaltura_service_url;
+const KALTURA_PARTNER_ID       = ubc_h5p_kaltura_integration_admin.kaltura_partner_id;
+const KALTURA_STREAMING_FORMAT = 'download';
+const KALTURA_PROTOCOL         = 'https';
 
 const downArrowSVG = () => {
     return (
@@ -53,6 +53,38 @@ export default props => {
         setIsInputdisabled(false);
     }
 
+    const getKalturaVideoUrl = (kalturaId) => {
+        return `${KALTURA_SERVICE_URL}/p/${KALTURA_PARTNER_ID}/sp/0/playManifest/entryId/${kalturaId}/format/${KALTURA_STREAMING_FORMAT}/protocol/${KALTURA_PROTOCOL}/flavorParamIds/${kalturaFormat}/`;
+    }
+
+    const uploadVideoToKaltura = async (videoFile) => {
+        const formData = new FormData();
+        formData.append( 'action', 'ubc_h5p_kaltura_upload_video' );
+        formData.append( 'nonce', ubc_h5p_kaltura_integration_admin.security_nonce );
+        formData.append( 'video_file', videoFile );
+
+        setActionsDisabled();
+        setMessage('');
+
+        let response = await fetch(ajaxurl, {
+            method: 'POST',
+            body: formData,
+        });
+        response = await response.json();
+
+        setActionsEnabled();
+        setMessage(response.message);
+        if (response.kalturaId) {
+            setKalturaID(response.kalturaId); 
+            setIsValid(true);
+
+            const videoUrl = getKalturaVideoUrl(response.kalturaId);
+            inputElement.value = videoUrl;
+        } else {
+            setIsValid(false);
+        }
+    }
+
     const generateKalturaVideoURL = async () => {
         if( ! kalturaID ) {
             setIsValid(false);
@@ -60,7 +92,7 @@ export default props => {
             return;
         }
 
-        const videoUrl = `https://${KALTURA_SERVICE_URL}/p/${KALTURA_PARTNER_ID}/sp/0/playManifest/entryId/${kalturaID}/format/${KALTURA_STRAMING_FORMAT}/protocol/${KALTURA_PROTOCOL}/flavorParamIds/${kalturaFormat}/`;
+        const videoUrl = getKalturaVideoUrl(kalturaID);
 
         let formData = new FormData();
 
@@ -102,6 +134,17 @@ export default props => {
     }
 
     const renderKalturaFields = () => {
+        if (!ubc_h5p_kaltura_integration_admin.kaltura_defined) {
+            return (
+                <div className="invalid h5p-notice"> 
+                    <p><strong>
+                        Sorry, we couldn't detect a Kaltura configuration on this site.
+                        To use Kaltura videos, please ensure you have provided a Kaltura configuration, then refresh the page.
+                    </strong></p>
+                </div>
+            );
+        }
+
         return (
             <div
                 style={{
@@ -109,10 +152,24 @@ export default props => {
                 }}
                 className='field'
             >
+                <h3>Upload Video to Kaltura</h3>
+                <input 
+                    type="file"
+                    placeholder="Choose a video file" 
+                    onChange={e => {
+                        const videoFile = e.target.files[0];
+                        if (videoFile) {
+                            uploadVideoToKaltura( videoFile );
+                        }
+                    }}
+                    disabled={ isInputDisabled }
+                ></input>
+                <p className='h5peditor-field-description'>Upload a video directly to Kaltura. The Kaltura ID will be automatically set when done.</p>
+
                 <h3>Video ID</h3>
                 <input 
                     type="text" 
-                    placeholder='Enter UBC kaltura video ID. Eg, 0_mxcjbk76' 
+                    placeholder='Enter Kaltura video ID. Eg, 0_mxcjbk76' 
                     className="h5peditor-text" 
                     value={kalturaID}
                     onChange={e => {
@@ -159,27 +216,23 @@ export default props => {
     }
 
     return (
-        <>
-            <div className='h5p-divider'></div>
-            <div className='field kaltura-integration'>
-                <div
-                    className='kaltura-integration-accordion'
+        <div className='field kaltura-integration'>
+            <div className='kaltura-integration-accordion'>
+                <div 
                     onClick={() => {
                         setIsVisible(!isVisible);
                     }}
                 >
-                    <div>
-                        <h3
-                            style={{
-                                marginBottom: 0
-                            }}
-                        >Use UBC Kaltura Video</h3>
-                        <div className='h5peditor-field-description'>See how to <a href={`${ ubc_h5p_kaltura_integration_admin.kaltura_instruction_url }`} target="_blank">find the ID for you videos</a> you have uploaded to Kaltura</div>
-                    </div>
-                    { downArrowSVG() }
+                    <h3
+                        style={{
+                            marginBottom: 0
+                        }}
+                    >Use Kaltura Video</h3>
+                    <div className='h5peditor-field-description'>See how to <a href={`${ ubc_h5p_kaltura_integration_admin.kaltura_instruction_url }`} target="_blank">find the ID for videos</a> you have uploaded to Kaltura</div>
                 </div>
+                { downArrowSVG() }
                 { isVisible ? renderKalturaFields() : null }
             </div>
-        </>
+        </div>
     );
 };
